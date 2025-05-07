@@ -54,7 +54,7 @@ export default {
       return this.$store.state.todos;
     },
     hasCompletedTasks() {
-      return this.$store.state.todos.some(todo => todo.completed)
+      return this.$store.state.todos.some((todo) => todo.completed);
     },
     visibility() {
       return this.$store.state.visibility;

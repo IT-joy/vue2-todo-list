@@ -28,7 +28,7 @@ export default {
     },
     allDone: {
       get() {
-        return !this.$store.state.todos.some(todo => !todo.completed)
+        return !this.$store.state.todos.some((todo) => !todo.completed);
       },
       set(value) {
         this.$store.commit("toggleAll", value);

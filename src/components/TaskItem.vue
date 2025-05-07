@@ -11,11 +11,9 @@
         {{ todo.title }}
       </label>
       <span class="task-item__status">
-        {{ todo.completed ? '✅ Выполнено' : '🟡 В процессе' }}
+        {{ todo.completed ? "✅ Выполнено" : "🟡 В процессе" }}
       </span>
-      <span class="task-item__date">
-        📅 {{ formatDate(todo.createdAt) }}
-      </span>
+      <span class="task-item__date"> 📅 {{ formatDate(todo.createdAt) }} </span>
 
       <button
         class="task-item__action-btn task-item__edit-btn"
@@ -53,13 +51,13 @@ export default {
       this.$store.commit("setShowModal", true);
     },
     formatDate(date) {
-      if (!date) return 'Дата не указана';
-      return new Date(date).toLocaleDateString('ru-RU', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
+      if (!date) return "Дата не указана";
+      return new Date(date).toLocaleDateString("ru-RU", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     },
   },
