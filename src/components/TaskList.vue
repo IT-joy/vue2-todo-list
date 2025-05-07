@@ -6,9 +6,9 @@
       :checked="allDone"
       @change="toggleAll"
     />
-    <ul class="task-list__container">
+    <transition-group name="task" tag="ul" class="task-list__container">
       <TaskItem v-for="todo in filteredTasks" :key="todo.id" :todo="todo" />
-    </ul>
+    </transition-group>
   </div>
 </template>
 
@@ -42,3 +42,22 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.task-enter-active,
+.task-leave-active {
+  transition: all 0.5s ease;
+}
+.task-enter-from,
+.task-leave-to {
+  opacity: 0;
+  transform: translateY(30px);
+}
+.task-leave-active {
+  position: absolute;
+  width: 100%;
+}
+.task-move {
+  transition: transform 0.5s ease;
+}
+</style>

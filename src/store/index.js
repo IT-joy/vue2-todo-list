@@ -155,6 +155,7 @@ export default new Vuex.Store({
     async deleteTask({ state, commit }, todo) {
       commit('SET_LOADING', true)
       try {
+        await new Promise(resolve => setTimeout(resolve, 500))
         commit('deleteTask', todo)
         await todoStorage.save(state.todos)
       } finally {
