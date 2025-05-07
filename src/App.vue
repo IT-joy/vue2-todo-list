@@ -21,5 +21,8 @@ export default {
     TaskFilters,
     EditModal,
   },
+  created() {
+    this.$store.dispatch('initTodos')
+  }
 };
 </script>
