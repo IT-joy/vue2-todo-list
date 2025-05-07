@@ -4,6 +4,8 @@ import store from './store'
 import '@/assets/main.scss'
 
 Vue.config.productionTip = false
+Vue.config.devtools = false
+Vue.config.silent = true
 
 new Vue({
   store,

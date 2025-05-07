@@ -1,61 +1,72 @@
 <template>
-  <div class="task-filters">
-    <button
-      @click="setVisibility('all')"
-      :class="{ active: visibility === 'all' }"
-    >
-      Все ({{ total }})
-    </button>
-    <button
-      @click="setVisibility('active')"
-      :class="{ active: visibility === 'active' }"
-    >
-      Активные ({{ activeCount }})
-    </button>
-    <button
-      @click="setVisibility('completed')"
-      :class="{ active: visibility === 'completed' }"
-    >
-      Выполненные ({{ completedCount }})
-    </button>
+  <div class="task-controls" v-show="todos.length" v-cloak>
+    <ul class="task-filters">
+      <li class="task-filters__item">
+        <a
+          href="#/all"
+          :class="[
+            'task-filters__link',
+            { 'task-filters__link--active': visibility == 'all' },
+          ]"
+          @click="setVisibility('all')"
+        >
+          Все
+        </a>
+      </li>
+      <li class="task-filters__item">
+        <a
+          href="#/active"
+          :class="[
+            'task-filters__link',
+            { 'task-filters__link--active': visibility == 'active' },
+          ]"
+          @click="setVisibility('active')"
+        >
+          Активные
+        </a>
+      </li>
+      <li class="task-filters__item">
+        <a
+          href="#/completed"
+          :class="[
+            'task-filters__link',
+            { 'task-filters__link--active': visibility == 'completed' },
+          ]"
+          @click="setVisibility('completed')"
+        >
+          Выполненные
+        </a>
+        <button
+          class="task-cleaner"
+          @click="removeCompleted"
+          v-show="hasCompletedTasks"
+          title="Удалить все выполненные"
+        ></button>
+      </li>
+    </ul>
   </div>
 </template>
 
 <script>
 export default {
   computed: {
-    visibility() {
-      return this.$store.state.visibility
-    },
     todos() {
-      return this.$store.state.todos
+      return this.$store.state.todos;
     },
-    total() {
-      return this.todos.length
+    hasCompletedTasks() {
+      return this.$store.state.todos.some(todo => todo.completed)
     },
-    activeCount() {
-      return this.todos.filter(t => !t.completed).length
+    visibility() {
+      return this.$store.state.visibility;
     },
-    completedCount() {
-      return this.todos.filter(t => t.completed).length
-    }
   },
   methods: {
-    setVisibility(filter) {
-      this.$store.commit('setVisibility', filter)
-    }
-  }
-}
+    setVisibility(visibility) {
+      this.$store.commit("setVisibility", visibility);
+    },
+    removeCompleted() {
+      this.$store.commit("removeCompleted");
+    },
+  },
+};
 </script>
-
-<style scoped>
-.task-filters {
-  display: flex;
-  gap: 10px;
-  margin: 15px 0;
-}
-button.active {
-  font-weight: bold;
-  text-decoration: underline;
-}
-</style>

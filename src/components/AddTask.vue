@@ -1,14 +1,21 @@
 <template>
-  <div class="task-header">
-    <h1>Список задач</h1>
-    <div class="search-box">
+  <div class="task-creator">
+    <h1 class="task-manager__title">Список задач</h1>
+    <div class="task-search">
       <input
+        class="task-search__input"
         type="text"
-        placeholder="Поиск задач..."
+        placeholder="Поиск задачи"
         v-model="searchQuery"
-        @input="updateSearch"
+        @input="updateSearchQuery"
       />
-      <button @click="addTask">+ Добавить</button>
+      <button
+        class="task-creator__add-btn"
+        @click="showAddModal"
+        title="Добавить"
+      >
+        +
+      </button>
     </div>
   </div>
 </template>
@@ -18,35 +25,23 @@ export default {
   computed: {
     searchQuery: {
       get() {
-        return this.$store.state.searchQuery
+        return this.$store.state.searchQuery;
       },
       set(value) {
-        this.$store.commit('setSearchQuery', value)
-      }
-    }
+        this.$store.commit("setSearchQuery", value);
+      },
+    },
   },
   methods: {
-    addTask() {
-      const title = prompt('Введите задачу:')
-      if (title) {
-        this.$store.commit('addTodo', title)
-      }
+    showAddModal() {
+      this.$store.commit("setModalTitle", "Новая задача");
+      this.$store.commit("setModalTaskTitle", "");
+      this.$store.commit("setCurrentTask", null);
+      this.$store.commit("setShowModal", true);
     },
-    updateSearch(e) {
-      this.searchQuery = e.target.value
-    }
-  }
-}
+    updateSearchQuery(e) {
+      this.$store.commit("setSearchQuery", e.target.value);
+    },
+  },
+};
 </script>
-
-<style scoped>
-.search-box {
-  display: flex;
-  gap: 10px;
-  margin: 15px 0;
-}
-input {
-  flex-grow: 1;
-  padding: 8px;
-}
-</style>
