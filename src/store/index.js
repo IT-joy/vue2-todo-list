@@ -3,26 +3,42 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
+const STORAGE_KEY = 'vue-todo-app'
+
+const todoStorage = {
+  fetch() {
+    const todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+    todos.forEach((todo, index) => {
+      todo.id = index + 1
+    })
+    return todos
+  },
+  save(todos) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos))
+  }
+}
+
 export default new Vuex.Store({
   state: {
-    todos: [
-      { id: 1, title: 'Первая задача', completed: false },
-      { id: 2, title: 'Вторая задача', completed: true }
-    ]
+    todos: todoStorage.fetch()
   },
   mutations: {
     addTodo(state, title) {
       state.todos.push({
-        id: Date.now(), // Простой уникальный ID
-        title,
-        completed: false
-      });
-    },
-    toggleTodo(state, todo) {
-      todo.completed = !todo.completed;
+        id: Date.now(),
+        title: title.trim(),
+        completed: false,
+        createdAt: new Date().toISOString()
+      })
+      todoStorage.save(state.todos)
     },
     deleteTask(state, todo) {
-      state.todos = state.todos.filter(t => t.id !== todo.id);
+      state.todos = state.todos.filter(t => t.id !== todo.id)
+      todoStorage.save(state.todos)
+    },
+    toggleTodo(state, todo) {
+      todo.completed = !todo.completed
+      todoStorage.save(state.todos)
     }
   }
 })
