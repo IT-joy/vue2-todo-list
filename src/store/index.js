@@ -4,45 +4,41 @@ import axios from 'axios'
 
 Vue.use(Vuex)
 
-const STORAGE_KEY = 'todos-vuejs-2.0'
+const STORAGE_KEY = 'vue-todo-app-tasks'
 const API_URL = 'https://jsonplaceholder.typicode.com/todos'
 
 const todoStorage = {
-  async fetch() {
+  async fetchInitial() {
+    const localData = localStorage.getItem(STORAGE_KEY)
+    if (localData) {
+      return JSON.parse(localData)
+    }
     try {
       const response = await axios.get(`${API_URL}?_limit=5`)
-      const apiTodos = response.data.map(todo => ({
-        ...todo,
+      const tasks = response.data.map(task => ({
+        id: task.id,
+        title: task.title,
+        completed: task.completed,
         createdAt: new Date().toISOString()
       }))
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(apiTodos))
-      return apiTodos
+      this.save(tasks)
+      return tasks
     } catch (error) {
-      console.error('API недоступен, используем localStorage', error)
-      const localTodos = JSON.parse(localStorage.getItem(STORAGE_KEY) || [])
-      localTodos.forEach((todo, index) => {
-        todo.id = index + 1
-      })
-      todoStorage.uid = localTodos.length + 1
-      return localTodos
+      console.error('Ошибка загрузки:', error)
+      return []
     }
   },
-  async save(todos) {
-    try {
-      await Promise.all(todos.map(async todo => {
-        if (!todo.synced) {
-          if (todo.id > 200) {
-            await axios.post(API_URL, todo)
-          } else {
-            await axios.put(`${API_URL}/${todo.id}`, todo)
-          }
-          todo.synced = true
-        }
-      }))
-    } catch (error) {
-      console.error('Ошибка синхронизации с API', error)
-    }
+  save(todos) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(todos))
+
+    this.syncWithAPI(todos).catch(e => console.error('Sync error:', e))
+  },
+  async syncWithAPI(todos) {
+    await Promise.all(todos.map(task => {
+      return task.id <= 200
+        ? axios.put(`${API_URL}/${task.id}`, task)
+        : axios.post(API_URL, task)
+    }))
   }
 }
 
@@ -56,8 +52,8 @@ export default new Vuex.Store({
     modalTitle: 'Новая задача',
     currentTask: null,
     isLoading: false,
-    error: null
-  },
+	error: null
+  },  
   getters: {
     filteredTasks(state) {
       let filtered = state.todos
@@ -78,31 +74,33 @@ export default new Vuex.Store({
     SET_TODOS(state, todos) {
       state.todos = todos
     },
-    SET_LOADING(state, isLoading) {
+	SET_LOADING(state, isLoading) {
       state.isLoading = isLoading
     },
-    SET_ERROR(state, error) {
+	SET_ERROR(state, error) {
       state.error = error
     },
     addTodo(state, title) {
-      state.todos.push({
+      const newTask = {
         id: Date.now(),
-        title,
+        title: title.trim(),
         completed: false,
-        createdAt: new Date().toISOString(),
-        synced: false
-      })
+        createdAt: new Date().toISOString()
+      }
+      state.todos.unshift(newTask)
+      todoStorage.save(state.todos)
     },
     updateTodo(state, { todo, title }) {
-      todo.title = title
-      todo.synced = false
+      todo.title = title.trim()
+      todoStorage.save(state.todos)
     },
     deleteTask(state, todo) {
       state.todos = state.todos.filter(t => t.id !== todo.id)
+      todoStorage.save(state.todos)
     },
     toggleTodo(state, todo) {
       todo.completed = !todo.completed
-      todo.synced = false
+      todoStorage.save(state.todos)
     },
     removeCompleted(state) {
       state.todos = state.todos.filter(todo => !todo.completed)
@@ -132,43 +130,33 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    async initTodos({ commit }) {
-      commit('SET_LOADING', true)
-      try {
-        const todos = await todoStorage.fetch()
-        commit('SET_TODOS', todos)
-      } catch (error) {
-        commit('SET_ERROR', error.message)
-      } finally {
-        commit('SET_LOADING', false)
+	async initTodos({ commit }) {
+	  commit('SET_LOADING', true)
+	  try {
+		const tasks = await todoStorage.fetchInitial()
+		commit('SET_TODOS', tasks)
+	  } catch (error) {
+		commit('SET_ERROR', 'Не удалось загрузить задачи')
+	  } finally {
+		commit('SET_LOADING', false)
+	  }
+	},
+    async saveTask({ commit, state }) {
+      if (state.currentTask) {
+        commit('updateTodo', {
+          todo: state.currentTask,
+          title: state.modalTaskTitle
+        })
+      } else {
+        commit('addTodo', state.modalTaskTitle)
       }
+      commit('setShowModal', false)
     },
-    async saveTask({ state, commit }) {
-      commit('SET_LOADING', true)
-      try {
-        if (state.currentTask) {
-          commit('updateTodo', {
-            todo: state.currentTask,
-            title: state.modalTaskTitle.trim()
-          })
-        } else {
-          commit('addTodo', state.modalTaskTitle.trim())
-        }
-        await todoStorage.save(state.todos)
-        commit('setShowModal', false)
-      } catch (error) {
-        commit('SET_ERROR', 'Ошибка сохранения задачи')
-      } finally {
-        commit('SET_LOADING', false)
-      }
-    },
-    async deleteTask({ commit, state }, todo) {
+    async deleteTask({ state, commit }, todo) {
       commit('SET_LOADING', true)
       try {
         commit('deleteTask', todo)
         await todoStorage.save(state.todos)
-      } catch (error) {
-        commit('SET_ERROR', 'Ошибка удаления задачи')
       } finally {
         commit('SET_LOADING', false)
       }
